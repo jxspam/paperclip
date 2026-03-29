@@ -17,6 +17,15 @@ import {
 import path from "node:path";
 import { detectClaudeLoginRequired, parseClaudeStreamJson } from "./parse.js";
 
+function isRunningAsRoot(): boolean {
+  return typeof process.getuid === "function" && process.getuid() === 0;
+}
+
+function wrapCommandForNonRoot(command: string, args: string[]): { command: string; args: string[] } {
+  if (!isRunningAsRoot()) return { command, args };
+  return { command: "runuser", args: ["-u", "node", "--", command, ...args] };
+}
+
 function summarizeStatus(checks: AdapterEnvironmentCheck[]): AdapterEnvironmentTestResult["status"] {
   if (checks.some((check) => check.level === "error")) return "fail";
   if (checks.some((check) => check.level === "warn")) return "warn";
@@ -146,10 +155,11 @@ export async function testEnvironment(
       if (maxTurns > 0) args.push("--max-turns", String(maxTurns));
       if (extraArgs.length > 0) args.push(...extraArgs);
 
+      const probeWrapped = wrapCommandForNonRoot(command, args);
       const probe = await runChildProcess(
         `claude-envtest-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        command,
-        args,
+        probeWrapped.command,
+        probeWrapped.args,
         {
           cwd,
           env,

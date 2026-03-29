@@ -55,7 +55,24 @@ async function buildSkillsDir(config: Record<string, unknown>): Promise<string> 
       path.join(target, entry.runtimeName),
     );
   }
+  // Ensure the skills dir is readable when Claude runs as a different user (e.g. via runuser)
+  await fs.chmod(tmp, 0o755);
+  await fs.chmod(path.join(tmp, ".claude"), 0o755);
+  await fs.chmod(target, 0o755);
   return tmp;
+}
+
+/**
+ * When running as root (uid 0), Claude Code rejects --dangerously-skip-permissions.
+ * Wrap the command with `runuser -u node --` to drop privileges automatically.
+ */
+function isRunningAsRoot(): boolean {
+  return typeof process.getuid === "function" && process.getuid() === 0;
+}
+
+function wrapCommandForNonRoot(command: string, args: string[]): { command: string; args: string[] } {
+  if (!isRunningAsRoot()) return { command, args };
+  return { command: "runuser", args: ["-u", "node", "--", command, ...args] };
 }
 
 interface ClaudeExecutionInput {
@@ -275,7 +292,8 @@ export async function runClaudeLogin(input: {
     authToken: input.authToken,
   });
 
-  const proc = await runChildProcess(input.runId, runtime.command, ["login"], {
+  const loginWrapped = wrapCommandForNonRoot(runtime.command, ["login"]);
+  const proc = await runChildProcess(input.runId, loginWrapped.command, loginWrapped.args, {
     cwd: runtime.cwd,
     env: runtime.env,
     timeoutSec: runtime.timeoutSec,
@@ -437,12 +455,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
 
   const runAttempt = async (resumeSessionId: string | null) => {
     const args = buildClaudeArgs(resumeSessionId);
+    const wrapped = wrapCommandForNonRoot(command, args);
     if (onMeta) {
       await onMeta({
         adapterType: "claude_local",
-        command,
+        command: wrapped.command,
         cwd,
-        commandArgs: args,
+        commandArgs: wrapped.args,
         commandNotes,
         env: redactEnvForLogs(env),
         prompt,
@@ -451,7 +470,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       });
     }
 
-    const proc = await runChildProcess(runId, command, args, {
+    const proc = await runChildProcess(runId, wrapped.command, wrapped.args, {
       cwd,
       env,
       stdin: prompt,
