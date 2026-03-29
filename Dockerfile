@@ -54,5 +54,5 @@ ENV NODE_ENV=production \
 
 EXPOSE 3100
 
-USER node
-CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
+# Start as root to fix volume permissions, then drop to node
+CMD ["bash", "-c", "chown -R node:node /paperclip && exec runuser -u node -- node --import ./server/node_modules/tsx/dist/loader.mjs server/dist/index.js"]
