@@ -14,10 +14,11 @@ import {
   buildPaperclipEnv,
   readPaperclipRuntimeSkillEntries,
   joinPromptSections,
-  redactEnvForLogs,
+  buildInvocationEnvForLogs,
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
   ensurePathInEnv,
+  resolveCommandForLogs,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -85,11 +86,13 @@ interface ClaudeExecutionInput {
 
 interface ClaudeRuntimeConfig {
   command: string;
+  resolvedCommand: string;
   cwd: string;
   workspaceId: string | null;
   workspaceRepoUrl: string | null;
   workspaceRepoRef: string | null;
   env: Record<string, string>;
+  loggedEnv: Record<string, string>;
   timeoutSec: number;
   graceSec: number;
   extraArgs: string[];
@@ -253,6 +256,12 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
 
   const runtimeEnv = ensurePathInEnv({ ...process.env, ...env });
   await ensureCommandResolvable(command, cwd, runtimeEnv);
+  const resolvedCommand = await resolveCommandForLogs(command, cwd, runtimeEnv);
+  const loggedEnv = buildInvocationEnvForLogs(env, {
+    runtimeEnv,
+    includeRuntimeKeys: ["HOME", "CLAUDE_CONFIG_DIR"],
+    resolvedCommand,
+  });
 
   const timeoutSec = asNumber(config.timeoutSec, 0);
   const graceSec = asNumber(config.graceSec, 20);
@@ -264,11 +273,13 @@ async function buildClaudeRuntimeConfig(input: ClaudeExecutionInput): Promise<Cl
 
   return {
     command,
+    resolvedCommand,
     cwd,
     workspaceId,
     workspaceRepoUrl,
     workspaceRepoRef,
     env,
+    loggedEnv,
     timeoutSec,
     graceSec,
     extraArgs,
@@ -324,7 +335,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const effort = asString(config.effort, "");
   const chrome = asBoolean(config.chrome, false);
   const maxTurns = asNumber(config.maxTurnsPerRun, 0);
-  const dangerouslySkipPermissions = asBoolean(config.dangerouslySkipPermissions, false);
+  // Default to true: Paperclip heartbeat runs are always non-interactive,
+  // so permission prompts would block indefinitely. Agents can still
+  // explicitly set this to false if needed for development/testing.
+  const dangerouslySkipPermissions = asBoolean(config.dangerouslySkipPermissions, true);
   const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
   const instructionsFileDir = instructionsFilePath ? `${path.dirname(instructionsFilePath)}/` : "";
   const commandNotes = instructionsFilePath
@@ -342,11 +356,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   });
   const {
     command,
+    resolvedCommand,
     cwd,
     workspaceId,
     workspaceRepoUrl,
     workspaceRepoRef,
     env,
+    loggedEnv,
     timeoutSec,
     graceSec,
     extraArgs,
@@ -459,11 +475,11 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (onMeta) {
       await onMeta({
         adapterType: "claude_local",
-        command: wrapped.command,
+        command: resolvedCommand,
         cwd,
         commandArgs: wrapped.args,
         commandNotes,
-        env: redactEnvForLogs(env),
+        env: loggedEnv,
         prompt,
         promptMetrics,
         context,
