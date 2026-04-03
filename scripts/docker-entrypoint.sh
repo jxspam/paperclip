@@ -22,8 +22,8 @@ if [ "$(id -g node)" -ne "$PGID" ]; then
     changed=1
 fi
 
-if [ "$changed" = "1" ]; then
-    chown -R node:node /paperclip
-fi
+# Always fix /paperclip ownership on startup. Files may be root-owned
+# from volume mounts, SSH sessions, or companies.sh imports.
+chown -R node:node /paperclip
 
 exec gosu node "$@"
