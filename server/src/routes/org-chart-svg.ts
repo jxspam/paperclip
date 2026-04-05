@@ -4,6 +4,8 @@
  * Pure SVG output — no browser/Playwright needed. PNG via sharp.
  */
 
+import { getInterFontFaces } from "./org-chart-fonts.js";
+
 export interface OrgNode {
   id: string;
   name: string;
@@ -746,6 +748,7 @@ export function renderOrgChartSvg(orgTree: OrgNode[], style: OrgChartStyle = "wa
     : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${TARGET_W}" height="${TARGET_H}" viewBox="0 0 ${TARGET_W} ${TARGET_H}">
+  <style>${getInterFontFaces()}</style>
   <defs>${theme.defs(TARGET_W, TARGET_H)}</defs>
   <rect width="100%" height="100%" fill="${theme.bgColor}" rx="6"/>
   ${theme.bgExtras(TARGET_W, TARGET_H)}
