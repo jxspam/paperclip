@@ -170,7 +170,7 @@ const THEMES: Record<OrgChartStyle, StyleTheme> = {
     lineWidth: 1.5,
     nameColor: "#fafafa",
     roleColor: "#71717a",
-    font: "system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif",
+    font: "'DejaVu Sans', sans-serif",
     watermarkColor: "rgba(255,255,255,0.25)",
     defs: () => "",
     bgExtras: () => "",
@@ -189,7 +189,7 @@ const THEMES: Record<OrgChartStyle, StyleTheme> = {
     lineWidth: 1.5,
     nameColor: "#ffffff",
     roleColor: "rgba(255,255,255,0.45)",
-    font: "system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif",
+    font: "'DejaVu Sans', sans-serif",
     watermarkColor: "rgba(255,255,255,0.2)",
     defs: (_w, _h) => `
       <linearGradient id="nebula-bg" x1="0" y1="0" x2="1" y2="1">
@@ -224,7 +224,7 @@ const THEMES: Record<OrgChartStyle, StyleTheme> = {
     lineWidth: 1.5,
     nameColor: "#e4e4e7",
     roleColor: "#6366f1",
-    font: "system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif",
+    font: "'DejaVu Sans', sans-serif",
     watermarkColor: "rgba(99,102,241,0.3)",
     defs: () => "",
     bgExtras: () => "",
@@ -260,7 +260,7 @@ const THEMES: Record<OrgChartStyle, StyleTheme> = {
     lineWidth: 2,
     nameColor: "#1c1917",
     roleColor: "#78716c",
-    font: "system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif",
+    font: "'DejaVu Sans', sans-serif",
     watermarkColor: "rgba(0,0,0,0.25)",
     defs: () => "",
     bgExtras: () => "",
@@ -739,10 +739,10 @@ export function renderOrgChartSvg(orgTree: OrgNode[], style: OrgChartStyle = "wa
 
   // Optional overlay elements
   const overlayNameSvg = overlay?.companyName
-    ? `<text x="${LOGO_PADDING}" y="${LOGO_PADDING + 16}" font-family="system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif" font-size="22" font-weight="700" fill="${theme.nameColor}">${svgEscape(overlay.companyName)}</text>`
+    ? `<text x="${LOGO_PADDING}" y="${LOGO_PADDING + 16}" font-family="'DejaVu Sans', sans-serif" font-size="22" font-weight="700" fill="${theme.nameColor}">${svgEscape(overlay.companyName)}</text>`
     : "";
   const overlayStatsSvg = overlay?.stats
-    ? `<text x="${TARGET_W - LOGO_PADDING}" y="${TARGET_H - LOGO_PADDING}" text-anchor="end" font-family="system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif" font-size="13" font-weight="500" fill="${theme.roleColor}">${svgEscape(overlay.stats)}</text>`
+    ? `<text x="${TARGET_W - LOGO_PADDING}" y="${TARGET_H - LOGO_PADDING}" text-anchor="end" font-family="'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="${theme.roleColor}">${svgEscape(overlay.stats)}</text>`
     : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${TARGET_W}" height="${TARGET_H}" viewBox="0 0 ${TARGET_W} ${TARGET_H}">
