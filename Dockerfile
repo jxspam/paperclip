@@ -17,10 +17,10 @@ RUN apt-get update \
 # Install Inter font for server-side SVG→PNG rendering (org chart exports).
 # Without this, Sharp/librsvg renders text as tofu rectangles.
 RUN mkdir -p /usr/share/fonts/truetype/inter \
-  && curl -fsSL "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip" -o /tmp/inter.zip \
-  && unzip -q /tmp/inter.zip -d /tmp/inter \
-  && cp /tmp/inter/Inter.ttc /usr/share/fonts/truetype/inter/ \
-  && rm -rf /tmp/inter /tmp/inter.zip \
+  && for style in Regular Medium SemiBold Bold; do \
+       curl -fsSL "https://raw.githubusercontent.com/rsms/inter/v4.1/fonts/desktop/Inter-${style}.otf" \
+         -o "/usr/share/fonts/truetype/inter/Inter-${style}.otf"; \
+     done \
   && fc-cache -f
 
 # Modify the existing node user/group to have the specified UID/GID to match host user
