@@ -2,7 +2,7 @@ FROM node:lts-trixie-slim AS base
 ARG USER_UID=1000
 ARG USER_GID=1000
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates gosu curl git wget ripgrep python3 \
+  && apt-get install -y --no-install-recommends ca-certificates gosu curl git wget ripgrep python3 fontconfig fonts-dejavu-core \
   && mkdir -p -m 755 /etc/apt/keyrings \
   && wget -nv -O/etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg \
   && echo "20e0125d6f6e077a9ad46f03371bc26d90b04939fb95170f5a1905099cc6bcc0  /etc/apt/keyrings/githubcli-archive-keyring.gpg" | sha256sum -c - \
@@ -13,6 +13,15 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends gh \
   && rm -rf /var/lib/apt/lists/* \
   && corepack enable
+
+# Install Inter font for server-side SVG→PNG rendering (org chart exports).
+# Without this, Sharp/librsvg renders text as tofu rectangles.
+RUN mkdir -p /usr/share/fonts/truetype/inter \
+  && curl -fsSL "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip" -o /tmp/inter.zip \
+  && unzip -q /tmp/inter.zip -d /tmp/inter \
+  && cp /tmp/inter/Inter.ttc /usr/share/fonts/truetype/inter/ \
+  && rm -rf /tmp/inter /tmp/inter.zip \
+  && fc-cache -f
 
 # Modify the existing node user/group to have the specified UID/GID to match host user
 RUN usermod -u $USER_UID --non-unique node \
