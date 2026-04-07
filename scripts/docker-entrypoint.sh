@@ -26,4 +26,15 @@ fi
 # from volume mounts, SSH sessions, or companies.sh imports.
 chown -R node:node /paperclip
 
+# Install Claude Code MCP plugins if not already present (persistent on /paperclip volume)
+PLUGIN_FILE="/paperclip/.claude/plugins/installed_plugins.json"
+if ! grep -q "asana@claude-plugins-official" "$PLUGIN_FILE" 2>/dev/null; then
+  echo "Installing Claude plugin: asana@claude-plugins-official"
+  gosu node claude plugin install asana@claude-plugins-official || true
+fi
+if ! grep -q "slack@claude-plugins-official" "$PLUGIN_FILE" 2>/dev/null; then
+  echo "Installing Claude plugin: slack@claude-plugins-official"
+  gosu node claude plugin install slack@claude-plugins-official || true
+fi
+
 exec gosu node "$@"
