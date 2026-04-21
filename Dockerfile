@@ -58,8 +58,8 @@ RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/cod
   && mkdir -p /paperclip \
   && chown node:node /paperclip
 
-COPY scripts/docker-entrypoint.sh scripts/cleanup-volume.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/cleanup-volume.sh
+COPY scripts/docker-entrypoint.sh scripts/cleanup-volume.sh scripts/sync-references.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/cleanup-volume.sh /usr/local/bin/sync-references.sh
 
 ENV NODE_ENV=production \
   HOME=/paperclip \

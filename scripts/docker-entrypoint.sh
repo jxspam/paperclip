@@ -29,6 +29,9 @@ chown -R node:node /paperclip
 # Prune stale workspaces, caches, and logs before starting
 cleanup-volume.sh || echo "Warning: cleanup-volume.sh failed, continuing anyway"
 
+# Sync reference repos (initial pull, then poll every 30m in background)
+sync-references.sh --daemon &
+
 # Install Claude Code MCP plugins if not already present (persistent on /paperclip volume)
 PLUGIN_FILE="/paperclip/.claude/plugins/installed_plugins.json"
 if ! grep -q "asana@claude-plugins-official" "$PLUGIN_FILE" 2>/dev/null; then
