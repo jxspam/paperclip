@@ -26,6 +26,9 @@ fi
 # from volume mounts, SSH sessions, or companies.sh imports.
 chown -R node:node /paperclip
 
+# Prune stale workspaces, caches, and logs before starting
+cleanup-volume.sh || echo "Warning: cleanup-volume.sh failed, continuing anyway"
+
 # Install Claude Code MCP plugins if not already present (persistent on /paperclip volume)
 PLUGIN_FILE="/paperclip/.claude/plugins/installed_plugins.json"
 if ! grep -q "asana@claude-plugins-official" "$PLUGIN_FILE" 2>/dev/null; then
